@@ -258,6 +258,10 @@ body.stilled .cover-pile .chip{opacity:1}
    than the figblock does — up to the viewport, not just the column's margins. */
 @media (min-width:1000px){.rt-embed{width:96vw;margin-inline:calc(50% - 48vw)}
   .rt-embed iframe{height:820px}}
+.partner-embeds{margin:clamp(30px,5vh,50px) 0 0;display:grid;gap:clamp(24px,4vw,40px)}
+.partner-embeds iframe{display:block;width:100%;border:none}
+@media (min-width:900px){.partner-embeds{grid-template-columns:1fr 1fr;
+  width:96vw;margin-inline:calc(50% - 48vw)}}
 .dr-legend{display:flex;flex-wrap:wrap;gap:7px 20px;margin:0 0 14px;
   font-size:12.5px;color:var(--ink-soft)}
 .dr-legend span{display:flex;align-items:center;gap:7px}
@@ -1082,6 +1086,24 @@ footer b{color:var(--ink-soft);font-weight:600}
       <p>Consistent with the Berkeley Protocol on Digital Open Source Investigations, the researchers began by conducting a Digital Landscape Assessment for each country, mapping the digital ecosystem to identify where relevant data may be found and to better understand any potential digital and psychological risks of investigating on those platforms.</p>
       <p>Because of the risk of documents being taken down or altered, we archived all references to removal arrangements immediately upon discovery. We collected and structured our data on a spreadsheet, which allowed us to create timelines and identify trends across third country removals. We worked on these country overview documents alongside our legal team, who concurrently microscopically examined the agreements using a detailed questionnaire template for each country.</p>
     </div>
+
+    <div class="section-mark reveal"><span class="num">11</span><h2>Explore the data from our partners</h2></div>
+    <div class="partner-embeds reveal">
+      <iframe src="https://icetracking.org/third-country/answer-map-embed.html?theme=light"
+              height="600" scrolling="no" loading="lazy"
+              title="IceTracking — third-country deportations"></iframe>
+      <iframe src="https://icetracking.org/third-country/mexico-map-embed.html?theme=light"
+              height="480" scrolling="no" loading="lazy"
+              title="IceTracking — the buses into Mexico"></iframe>
+    </div>
+    <script>
+    window.addEventListener('message', function (e) {
+      if (!e.data || e.data.type !== 'tcd:height' || !e.data.height) return;
+      document.querySelectorAll('.partner-embeds iframe').forEach(function (f) {
+        if (f.contentWindow === e.source) f.height = e.data.height;
+      });
+    });
+    </script>
 
     <div class="credits reveal">
       <span class="orgmark">
