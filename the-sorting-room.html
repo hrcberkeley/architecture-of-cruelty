@@ -864,7 +864,7 @@ footer b{color:var(--ink-soft);font-weight:600}
 
     <!-- every slip in one stack before the first desk deals them; see the intro beat in buildAct() -->
     <div class="pile intro-pile" id="intro-pile" aria-hidden="true"></div>
-    <p class="handoff reveal">Thirty-nine arrangements. Ten ways to sort them.
+    <p class="handoff reveal">Thirty-nine arrangements. Thirty-five countries. Ten ways to sort them.
       <span>Keep scrolling</span></p>
 
   </div></div>
@@ -1481,7 +1481,7 @@ function buildAct(){
       body:el.querySelector(".note-body"), pos:el.querySelector(".story-position"),
       meter:el.querySelector(".story-progress"), views};
     el.querySelector(".rb-total").textContent=
-      `${DATA.meta.countries} countries · ${DATA.meta.total} documents · ${DATA.meta.public} public texts`;
+      `${DATA.meta.countries} countries · ${DATA.meta.total} documents · ${DATA.meta.public} public texts · As of September 1, 2026`;
     stages.push(st);
     views.forEach(id=>{
       const b=document.createElement("span");
