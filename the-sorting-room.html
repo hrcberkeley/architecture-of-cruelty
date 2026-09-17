@@ -339,6 +339,8 @@ table.dr td:hover,table.dr td:focus-visible{outline:2px solid var(--ink);outline
 /* The pile shows exactly when the slips are out of the drawers — which is to
    say, for as long as a chapter is being read. */
 .act.reading .pile,.act.reading .pile-tag,.act.reading .pile-shelf{opacity:1}
+/* the same stack, above the handoff, before the first desk has dealt anything */
+.intro-pile{opacity:1;margin:clamp(40px,7vh,72px) auto 0}
 /* On the shelf breakpoint a leaving or arriving desk stops above the shelf. */
 @media (max-width:899px){
   .act.reading .frame{padding-bottom:calc(var(--pile-h,120px) + 38px)}
@@ -836,6 +838,8 @@ footer b{color:var(--ink-soft);font-weight:600}
       </div>
     </div>
 
+    <!-- every slip in one stack before the first desk deals them; see the intro beat in buildAct() -->
+    <div class="pile intro-pile" id="intro-pile" aria-hidden="true"></div>
     <p class="handoff reveal">Thirty-nine arrangements. Ten ways to sort them.
       <span>Keep scrolling</span></p>
 
@@ -1168,7 +1172,8 @@ let selected=null, activeDocPages=[], activeDocPage=0;
 /* the view a gather beat shows: no drawers at all, every slip in one stack */
 const PILE="__pile";
 const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const ALL_CHIPS="#act .zones .chip,#pile .chip";
+const introPileEl=$("#intro-pile");
+const ALL_CHIPS="#act .zones .chip,#pile .chip,#intro-pile .chip";
 
 document.getElementById("pile-count").textContent=DATA.meta.total;
 
@@ -1254,7 +1259,7 @@ function layoutPapers(st){
 /* The pile: every slip in one stack, drawn bottom-up so the papers laid down
    first sit lowest. Deterministic jitter, so the stack is the same every time
    the story passes through it. */
-function renderPile(){
+function renderPile(host=pileEl){
   const rnd=seeded(11);
   const n=AGS.length;
   const narrow=innerWidth<900;
@@ -1265,9 +1270,9 @@ function renderPile(){
     Math.max(34,innerHeight*.13)));
   const ph=Math.round(pw*297/210);
   const jx=Math.round(pw*.34), jy=Math.round(pw*.30);
-  pileEl.style.cssText=`--paper-width:${pw}px;width:${pw+jx}px;height:${ph+jy}px`;
-  actEl.style.setProperty("--pile-h",(ph+jy)+"px");     // the shelf sizes itself off this
-  pileEl.innerHTML=AGS.map((a,i)=>{
+  host.style.cssText=`--paper-width:${pw}px;width:${pw+jx}px;height:${ph+jy}px`;
+  if(host===pileEl)actEl.style.setProperty("--pile-h",(ph+jy)+"px");     // the shelf sizes itself off this
+  host.innerHTML=AGS.map((a,i)=>{
     const t=n>1?i/(n-1):0;
     const px=(jx*.5+(rnd()*2-1)*jx*.5).toFixed(1);
     const py=Math.max(0,jy*(1-t)+(rnd()*2-1)*jy*.2).toFixed(1);
@@ -1290,7 +1295,13 @@ function playBeat(beat,animate=true){
   actEl.classList.toggle("reading",gather);
 
   const drawn=new Set();
-  if(gather){
+  introPileEl.innerHTML="";
+  if(beat.kind==="intro"){
+    renderStage(beat.stage,beat.next,false);drawn.add(beat.stage);
+    pileEl.innerHTML="";
+    renderPile(introPileEl);
+    activeStage=beat.stage;
+  }else if(gather){
     renderStage(beat.stage,beat.lens,false);drawn.add(beat.stage);
     if(beat.into){renderStage(beat.into,beat.next,false);drawn.add(beat.into);}
     renderPile();
@@ -1436,6 +1447,10 @@ function buildAct(){
       frag.appendChild(after[i]);       // the chapter, in plain flow after the desk
     }
   });
+  /* before any desk: the slips sit stacked above the handoff, and the first desk
+     rises with its drawers empty. No element of its own — it holds for as long
+     as the reader is above the first lens. */
+  BEATS.unshift({el:null,kind:"intro",view:PILE,lens:BEATS[0].lens,stage:stages[0],next:BEATS[0].view});
   /* each gather beat needs to know which desk it is handing the pile to */
   BEATS.forEach((b,i)=>{
     if(b.kind!=="gather")return;
@@ -1451,7 +1466,9 @@ function buildAct(){
    until it is pinned, the beat still in force is the gather before it. */
 let beatTops=[];
 function measureStory(){
-  beatTops=BEATS.map(b=>b.el.getBoundingClientRect().top+scrollY-b.stage.root.offsetHeight);
+  beatTops=BEATS.map(b=>b.el?b.el.getBoundingClientRect().top+scrollY-b.stage.root.offsetHeight:-Infinity);
+  /* the first sort starts while the stack is still on screen, desk halfway up */
+  if(beatTops.length>1)beatTops[1]-=innerHeight*.5;
 }
 function beatIndexAt(y){
   let lo=0,hi=beatTops.length-1,at=0;
