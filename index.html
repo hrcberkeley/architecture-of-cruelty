@@ -1431,6 +1431,8 @@ const ROMAN=["I","II","III","IV","V","VI"];
 
 const bold=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
 function renderNote(st,view){
+  const changed=st.noteView!==view;
+  st.noteView=view;
   const meta=VIEWS.find(v=>v.id===view);
   const part=meta?CHAPTERS.indexOf(meta.group):0;
   st.chapter.textContent=`Part ${ROMAN[part]||part+1} · ${meta?meta.group:""}`;
@@ -1441,7 +1443,10 @@ function renderNote(st,view){
   const index=Math.max(0,VIEWS.findIndex(v=>v.id===view));
   st.pos.textContent=`${index+1} / ${VIEWS.length}`;
   st.meter.style.setProperty("--story-progress-scale",(index+1)/VIEWS.length);
-  if(!reduceMotion){
+  /* a gather beat re-renders the leaving desk's note at its own unchanged lens
+     (papers go to the pile, text doesn't) — only an actual lens change earns
+     the fade-in replay */
+  if(changed&&!reduceMotion){
     st.notebook.classList.remove("swap");void st.notebook.offsetWidth;st.notebook.classList.add("swap");
   }
 }
