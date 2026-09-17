@@ -248,6 +248,12 @@ body.stilled .cover-pile .chip{opacity:1}
    for CVD separation and contrast against --desk. */
 .figblock{margin:clamp(30px,5vh,50px) 0 0;--cell:15px;--cellgap:3px;
   --binding:#1A6A9B;--template:#8A6200}
+.rt-embed{margin:clamp(30px,5vh,50px) 0 0}
+.rt-embed iframe{display:block;width:100%;height:760px;border:1px solid var(--hairline)}
+.rt-embed figcaption{margin:12px 0 0;font-size:13px;line-height:1.6;color:var(--ink-faint);
+  max-width:70ch;text-wrap:pretty}
+.rt-embed figcaption a{color:inherit}
+@media (max-width:640px){.rt-embed iframe{height:560px}}
 .dr-legend{display:flex;flex-wrap:wrap;gap:7px 20px;margin:0 0 14px;
   font-size:12.5px;color:var(--ink-soft)}
 .dr-legend span{display:flex;align-items:center;gap:7px}
@@ -804,6 +810,13 @@ footer b{color:var(--ink-soft);font-weight:600}
       <p>Third Country Removal Arrangements are crucial to current US immigration policy of mass deportation. These arrangements are the processes by which representatives from the United States and another country negotiate terms for sending refugees and migrants from the United States to a third country with which the refugee or migrant has no prior connections and may not even speak the language.</p>
       <p>In March, 2025, an internal memo by Kristi Noem, then Secretary of the Department of Homeland Security, set forth guidance on conducting third country removals to DHS employees with the directive for removals that, "Immigration officers will not affirmatively ask whether the alien is afraid of being removed to that country." These remarks speak to the new reality of mass deportations– while the use of removal agreements is not new, the second Trump Administration has exponentially expanded their scale and purpose, and altered their removal processes.</p>
     </div>
+    <figure class="rt-embed reveal">
+      <iframe src="https://hrcberkeley.github.io/removals-timeline/graph.html"
+              title="Removals timeline: U.S. third-country removal agreements, 2025–2026"
+              loading="lazy"></iframe>
+      <figcaption>Every third-country removal agreement, plotted over time. From the
+        <a href="https://hrcberkeley.github.io/removals-timeline/graph.html" target="_blank" rel="noopener">removals timeline</a>.</figcaption>
+    </figure>
 
     <div class="section-mark reveal"><span class="num">02</span><h2>Investigating a System Operating in the Shadows</h2></div>
     <div class="prose-block reveal">
