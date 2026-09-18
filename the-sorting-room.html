@@ -267,7 +267,7 @@ body.stilled .cover-pile .chip{opacity:1}
   width:96vw;margin-inline:calc(50% - 48vw)}}
 .dr-scroll{position:relative;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
 .dr-scroll:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
-table.dr{border-collapse:separate;border-spacing:var(--cellgap);width:100%}
+table.dr{border-collapse:separate;border-spacing:var(--cellgap);margin:0 auto}
 table.dr thead td{padding:0}
 table.dr th{font-weight:400;padding:0}
 table.dr thead th{vertical-align:bottom;height:8.5em}
@@ -297,11 +297,14 @@ table.dr .dr-link:focus-visible{outline:2px solid var(--focus);outline-offset:1p
   max-width:250px;opacity:0;transition:opacity .12s}
 .dr-tip b{display:block;margin-bottom:2px}
 .dr-tip i{font-style:normal;color:var(--ink-faint);font-family:var(--mono);font-size:10.5px}
-/* The grid is only legible whole, so where the text column has a margin beside
-   it the figure hangs into the right one rather than scroll. Never the left: that
-   gutter holds the pile while a chapter is read. Below that it keeps the
-   scroller, with the row headers pinned. */
-@media (min-width:900px){.figblock{width:min(calc(100% + 370px),calc(50% + 50vw - 24px))}}
+/* The grid is only legible whole, so where the text column has margins beside
+   it the figure hangs evenly into both, centred on the text, but stops short of
+   the left gutter's pile (~200px). The caption stays on the text column. Below
+   that it keeps the scroller, with the row headers pinned. */
+@media (min-width:900px){
+  .figblock{--fw:max(100%,min(calc(100% + 370px),calc(100vw - 420px)));
+    width:var(--fw);margin-inline:calc((100% - var(--fw)) / 2)}
+  .figblock figcaption{max-width:63ch;margin-inline:auto}}
 @media (max-width:640px){.figblock{--cell:12px;--cellgap:2px}
   table.dr tbody th[scope=row]{font-size:11px;padding-right:8px}}
 @media (forced-colors:active){
