@@ -233,8 +233,12 @@ body.stilled .cover-pile .chip{opacity:1}
 .note-body p.caption{color:var(--ink);font-size:15px;line-height:1.52}
 .note-body p:last-child{margin-bottom:0}
 .note-body p.analysis{color:var(--ink-faint)}
-.zone-head:has(.zone-group){flex-wrap:wrap}
-.zone-group{display:block;flex-basis:100%;font:600 9.5px/1.25 var(--mono,monospace);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px}
+/* A drawer divided in two or three: one outer drawer spanning a column per
+   division, each division an ordinary drawer inside it. */
+.zone.zgroup{display:flex;flex-direction:column}
+.zgroup-label{font-family:var(--body);font-weight:700;font-size:clamp(10px,calc(12.5px * var(--density)),12.5px);line-height:1.2}
+.subzones{flex:1;display:grid;grid-template-columns:repeat(var(--subs),minmax(0,1fr));gap:calc(6px * var(--density))}
+.zone.sub{background:transparent;border-width:1px}
 @media (prefers-reduced-motion:no-preference){
   .notebook.swap .note-chapter,.notebook.swap .view-title,
   .notebook.swap .note-body{animation:note-in .5s cubic-bezier(.16,1,.3,1) backwards}
@@ -392,7 +396,7 @@ table.dr .dr-link:focus-visible{outline:2px solid var(--focus);outline-offset:1p
 .zones.packed{--density:.68}
 .zones.fit-tight{--density:.58}
 .zones.fit-tiny{--density:.5}
-.zones.last-wide .zone:last-child{grid-column:1/-1}
+.zones.last-wide > .zone:last-child{grid-column:1/-1}
 .zones-wrap{flex:1;min-height:0;overflow:hidden;padding:2px 3px 5px 2px}
 /* Deliberately NOT overscroll-contain: the desk sits inside the sticky story,
    so once the drawers reach their end the scroll must carry on to the next lens
@@ -1279,8 +1283,9 @@ function fitDrawers(st){
 function layoutPapers(st){
   if(!st)return;
   st.zones.querySelectorAll(".zone").forEach(zone=>{
-    const chips=zone.querySelector(".chips");
-    const head=zone.querySelector(".zone-head");
+    const chips=zone.querySelector(":scope > .chips");
+    if(!chips)return;                  // a divided drawer: its divisions lay out
+    const head=zone.querySelector(":scope > .zone-head");
     const papers=chips.children.length;
     if(!papers)return;
     const cs=getComputedStyle(zone);
@@ -1384,19 +1389,31 @@ function renderStage(st,view,withChips){
   zonesEl.className="zones "+layout.density;
   if(buckets.length>1&&buckets.length%layout.cols===1)zonesEl.classList.add("last-wide");
   zonesEl.style.setProperty("--zone-cols",layout.cols);
-  zonesEl.innerHTML=buckets.map(b=>{
+  const drawer=b=>{
     const clickable=b.cat||b.term;
     const label=clickable
       ?`<button class="zone-label" data-cat="${b.cat||""}" data-term="${b.term||""}">${b.label}<span class="whatis"><b>what is this?</b></span></button>`
       :`<span class="zone-label" style="cursor:default">${b.label}</span>`;
     /* A drawer of countries that hold no agreement (transit countries) has no
        slips to hold, so it names them instead. */
-    return `<section class="zone ${b.aside?"aside":""}">
-      <div class="zone-head">${b.group?`<span class="zone-group">${b.group}</span>`:""}${label}
+    return `<section class="zone ${b.aside?"aside":""} ${b.group?"sub":""}">
+      <div class="zone-head">${label}
         <span class="zone-count">${(b.outside||b.members).length}<span class="vh"> ${b.outside?"countries":"agreements"}</span></span></div>
       ${b.outside?`<p class="zone-outside">No agreement, so no sheet on this desk: ${b.outside.join(", ")}.</p>`:""}
       <div class="chips">${withChips?b.members.map(id=>chipHTML(byId[id])).join(""):""}</div></section>`;
-  }).join("");
+  };
+  /* consecutive drawers sharing a group become divisions of one drawer */
+  let html="";
+  for(let i=0;i<buckets.length;){
+    const g=buckets[i].group;
+    if(!g){html+=drawer(buckets[i++]);continue;}
+    const run=[];
+    while(i<buckets.length&&buckets[i].group===g)run.push(buckets[i++]);
+    html+=`<section class="zone zgroup" style="grid-column:span ${Math.min(run.length,layout.cols)};--subs:${run.length}">
+      <div class="zone-head"><span class="zgroup-label">${g}</span></div>
+      <div class="subzones">${run.map(drawer).join("")}</div></section>`;
+  }
+  zonesEl.innerHTML=html;
 
   layoutPapers(st);
   fitDrawers(st);
