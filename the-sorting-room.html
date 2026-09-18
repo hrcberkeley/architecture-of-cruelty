@@ -1607,7 +1607,8 @@ addEventListener("load",()=>{measureStory();queueStorySync();refit();jumpToPendi
    every beat after them, which is why a deep link has to be re-aimed until the
    page has stopped moving under it. */
 if(document.fonts&&document.fonts.ready)
-  document.fonts.ready.then(()=>{refit();measureStory();jumpToPending();pendingLens=null;});
+  document.fonts.ready.then(()=>{refit();measureStory();jumpToPending();pendingLens=null;
+    document.querySelectorAll("table.dr").forEach(centerShiftTable);});
 
 /* A deep link aims at a lens, but only until the reader takes over. */
 let pendingLens=null;
@@ -2096,7 +2097,22 @@ function buildShift(fig){
     drTip.style.top=(e.clientY+16)+"px";
   });
   table.addEventListener("pointerleave",()=>{drTip.style.opacity="0";});
+  centerShiftTable(table);
 }
+/* Centring the whole <table> (margin:auto) counts the sticky row-label column
+   in the middle, so the grid itself sits right of the caption/text above and
+   below it. Shift left by half that column's width so the grid — not the
+   table box — lines up with the text. No-op once the table overflows its
+   scroller (margin has nowhere to go and the reader is scrolling anyway). */
+function centerShiftTable(table){
+  const rowHead=table.querySelector("tbody th[scope=row]"), scroll=table.parentElement;
+  if(!rowHead||!scroll)return;
+  const labelW=rowHead.getBoundingClientRect().width;
+  const avail=scroll.clientWidth-table.getBoundingClientRect().width;
+  table.style.marginLeft=(avail>0?Math.max(0,avail/2-labelW/2):0)+"px";
+  table.style.marginRight="0px";
+}
+addEventListener("resize",()=>document.querySelectorAll("table.dr").forEach(centerShiftTable));
 const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 function fmtDate(d){const[y,m,dd]=d.split("-");return `${+dd} ${MON[+m-1]} ${y}`;}
 document.querySelectorAll("figure[data-figure]").forEach(buildShift);
