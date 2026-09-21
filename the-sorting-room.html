@@ -118,10 +118,11 @@ body.stilled .cover-pile .chip,body.stilled .cover-pile .gust,
 body.stilled .scroll-cue-big i::after{animation:none}
 body.stilled .cover-pile .chip{opacity:1}
 
-/* the pile: real slips, scattered, purely decorative.
-   Two layers of motion sell the wind: .gust carries the slip along a slow
-   left-to-right current (phase-offset by position, so the gust visibly sweeps
-   across the pile), while the slip itself flutters on its own shorter cycle. */
+/* every slip, scattered by the wind — the same papers the desks deal later.
+   Two layers of motion sell it: .gust carries the slip along a slow
+   left-to-right current that every slip shares (phase-offset by position, so
+   each gust visibly sweeps across the pile), while the slip itself tips toward
+   and away from the reader on its own shorter cycle. */
 .cover-pile{position:absolute;inset:0 0 0 auto;width:min(52%,760px);z-index:1;pointer-events:none;opacity:.62;
   --wind:1;--ps:1;
   -webkit-mask-image:linear-gradient(100deg,transparent 12%,#000 44%);
@@ -149,11 +150,16 @@ body.stilled .cover-pile .chip{opacity:1}
   80%{transform:translate3d(calc(var(--gx) * .3 * var(--wind)),calc(var(--gy) * .06 * var(--wind)),0)
       rotate(calc(var(--gr,7deg) * -.5 * var(--wind))) scale(1.014)}
 }
+/* Paper in the wind reads by foreshortening: the sheet tips out of the page,
+   it doesn't just turn on it. The tip grows with --wind, like the current. */
 @keyframes flutter{
-  0%,100%{transform:rotate(var(--tilt)) skewY(0deg)}
-  28%{transform:rotate(calc(var(--tilt) + var(--fr,3deg) * .55)) skewY(calc(var(--fr,3deg) * -.28))}
-  50%{transform:rotate(calc(var(--tilt) + var(--fr,3deg))) skewY(calc(var(--fr,3deg) * .34))}
-  74%{transform:rotate(calc(var(--tilt) + var(--fr,3deg) * .3)) skewY(calc(var(--fr,3deg) * -.18))}
+  0%,100%{transform:perspective(520px) rotateX(0deg) rotateY(0deg) rotate(var(--tilt))}
+  28%{transform:perspective(520px) rotateX(calc(var(--fx,16deg) * .55 * var(--wind)))
+      rotateY(calc(var(--fy,10deg) * -.4 * var(--wind))) rotate(calc(var(--tilt) + var(--fr,3deg) * .55))}
+  50%{transform:perspective(520px) rotateX(calc(var(--fx,16deg) * var(--wind)))
+      rotateY(calc(var(--fy,10deg) * var(--wind))) rotate(calc(var(--tilt) + var(--fr,3deg)))}
+  74%{transform:perspective(520px) rotateX(calc(var(--fx,16deg) * -.35 * var(--wind)))
+      rotateY(calc(var(--fy,10deg) * .5 * var(--wind))) rotate(calc(var(--tilt) + var(--fr,3deg) * .3))}
 }
 @media (prefers-reduced-motion:reduce){.cover-pile .chip,.cover-pile .gust{animation:none}}
 
@@ -330,8 +336,9 @@ table.dr .dr-link:focus-visible{outline:2px solid var(--focus);outline-offset:1p
 
 /* ---------------- the pile ---------------- */
 /* Its own layer, pinned across the whole act and above everything in it, so the
-   stack stays put while one desk leaves, a chapter is read, and the next desk
-   arrives. The negative margin cancels its height, so it costs nothing in flow. */
+   stack stays put while the introduction is read, one desk leaves, a chapter is
+   read, and the next desk arrives. The negative margin cancels its height, so it
+   costs nothing in flow. */
 .act{position:relative}
 .pile-layer{position:sticky;top:0;height:100svh;margin-bottom:-100svh;z-index:12;pointer-events:none}
 .pile-slot{position:absolute;left:clamp(16px,2.6vw,46px);bottom:clamp(20px,4vh,48px);
@@ -355,11 +362,10 @@ table.dr .dr-link:focus-visible{outline:2px solid var(--focus);outline-offset:1p
   .pile-tag{width:auto;max-width:18ch}
   .pile-tag b{display:inline;font-size:15px;margin-right:5px}
 }
-/* The pile shows exactly when the slips are out of the drawers — which is to
-   say, for as long as a chapter is being read. */
+/* The pile shows exactly when the slips are out of the drawers and off the
+   cover — which is to say, for as long as the introduction or a chapter is
+   being read. */
 .act.reading .pile,.act.reading .pile-tag,.act.reading .pile-shelf{opacity:1}
-/* the same stack, above the handoff, before the first desk has dealt anything */
-.intro-pile{opacity:1;margin:clamp(40px,7vh,72px) auto 0}
 /* On the shelf breakpoint a leaving or arriving desk stops above the shelf. */
 @media (max-width:899px){
   .act.reading .frame{padding-bottom:calc(var(--pile-h,120px) + 38px)}
@@ -787,6 +793,20 @@ footer b{color:var(--ink-soft);font-weight:600}
 <a class="skip" href="#findings">Skip the sorting room, go to the findings</a>
 <main id="main">
 
+<!-- The act box starts at the cover, not at the first desk, so that the pile
+     can ride above all of it: the cover's slips land on it, and it holds them
+     while the introduction is read, one desk leaves, a chapter is read, and
+     the next desk arrives. -->
+<div class="act" id="act">
+
+<div class="pile-layer" aria-hidden="true" inert>
+  <div class="pile-shelf"></div>
+  <div class="pile-slot">
+    <div class="pile" id="pile"></div>
+    <p class="pile-tag"><b id="pile-count">38</b>documents</p>
+  </div>
+</div>
+
 <!-- ============================ ACT I — the cover ============================ -->
 <section class="cover">
   <div class="cover-pile" id="cover-pile" aria-hidden="true"></div>
@@ -855,8 +875,6 @@ footer b{color:var(--ink-soft);font-weight:600}
       </div>
     </div>
 
-    <!-- every slip in one stack before the first desk deals them; see the intro beat in buildAct() -->
-    <div class="pile intro-pile" id="intro-pile" aria-hidden="true"></div>
     <p class="handoff reveal">Thirty-nine arrangements. Thirty-five countries. Ten ways to sort them.
       <span>Keep scrolling</span></p>
 
@@ -871,17 +889,6 @@ footer b{color:var(--ink-soft);font-weight:600}
          of the screen with its drawers empty and waiting.
      Only the chapters are written here. buildAct() splits the lenses into runs
      around them and builds one stage per run from the template below. -->
-<div class="act" id="act">
-
-<!-- The pile rides above the whole act, so the slips stay in place while one
-     desk leaves, a chapter is read, and the next desk arrives. -->
-<div class="pile-layer" aria-hidden="true" inert>
-  <div class="pile-shelf"></div>
-  <div class="pile-slot">
-    <div class="pile" id="pile"></div>
-    <p class="pile-tag"><b id="pile-count">38</b>documents</p>
-  </div>
-</div>
 
 <!-- ====================== CHAPTERS — write long sections here ======================
      <section class="chapter" data-before="LENS_ID"> is placed just before that
@@ -1227,8 +1234,8 @@ let selected=null, activeDocPages=[], activeDocPage=0;
 /* the view a gather beat shows: no drawers at all, every slip in one stack */
 const PILE="__pile";
 const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const introPileEl=$("#intro-pile");
-const ALL_CHIPS="#act .zones .chip,#pile .chip,#intro-pile .chip";
+const coverPileEl=$("#cover-pile");
+const ALL_CHIPS="#act .zones .chip,#pile .chip";
 
 document.getElementById("pile-count").textContent=DATA.meta.total;
 
@@ -1315,7 +1322,7 @@ function layoutPapers(st){
 /* The pile: every slip in one stack, drawn bottom-up so the papers laid down
    first sit lowest. Deterministic jitter, so the stack is the same every time
    the story passes through it. */
-function renderPile(host=pileEl){
+function renderPile(){
   const rnd=seeded(11);
   const n=AGS.length;
   const narrow=innerWidth<900;
@@ -1326,9 +1333,9 @@ function renderPile(host=pileEl){
     Math.max(34,innerHeight*.13)));
   const ph=Math.round(pw*297/210);
   const jx=Math.round(pw*.34), jy=Math.round(pw*.30);
-  host.style.cssText=`--paper-width:${pw}px;width:${pw+jx}px;height:${ph+jy}px`;
-  if(host===pileEl)actEl.style.setProperty("--pile-h",(ph+jy)+"px");     // the shelf sizes itself off this
-  host.innerHTML=AGS.map((a,i)=>{
+  pileEl.style.cssText=`--paper-width:${pw}px;width:${pw+jx}px;height:${ph+jy}px`;
+  actEl.style.setProperty("--pile-h",(ph+jy)+"px");     // the shelf sizes itself off this
+  pileEl.innerHTML=AGS.map((a,i)=>{
     const t=n>1?i/(n-1):0;
     const px=(jx*.5+(rnd()*2-1)*jx*.5).toFixed(1);
     const py=Math.max(0,jy*(1-t)+(rnd()*2-1)*jy*.2).toFixed(1);
@@ -1337,29 +1344,35 @@ function renderPile(host=pileEl){
   }).join("");
 }
 
-/* Play a beat. A lens beat fills its own desk with the slips; a gather beat
-   empties the desk that is leaving — and lays out the drawers of the desk that
-   is arriving, so it rises from the bottom of the screen already labelled and
-   waiting — while every slip goes to the pile. */
+/* Play a beat. The cover beat scatters the slips in the wind; a lens beat fills
+   its own desk with them; a gather beat empties the desk that is leaving — and
+   lays out the drawers of the desk that is arriving, so it rises from the bottom
+   of the screen already labelled and waiting — while every slip goes to the pile. */
 function playBeat(beat,animate=true){
   const old={};
   if(animate&&!reduceMotion)
-    document.querySelectorAll(ALL_CHIPS).forEach(ch=>{const id=ch.dataset.ag;if(!(id in old))old[id]=ch.getBoundingClientRect();});
+    document.querySelectorAll(ALL_CHIPS+",#cover-pile .chip").forEach(ch=>{const id=ch.dataset.ag;if(!(id in old))old[id]=ch.getBoundingClientRect();});
 
+  const offCover=activeBeat&&activeBeat.kind==="cover";
   activeBeat=beat;
   const gather=beat.kind==="gather";
   actEl.classList.toggle("reading",gather);
+  /* the pile takes the cover's slips at the strength they had, not from nothing */
+  if(offCover&&gather){
+    pileEl.style.transition="none";pileEl.style.opacity=getComputedStyle(coverPileEl).opacity;
+    void pileEl.offsetWidth;pileEl.style.transition=pileEl.style.opacity="";
+  }
 
   const drawn=new Set();
-  introPileEl.innerHTML="";
-  if(beat.kind==="intro"){
+  coverPileEl.innerHTML="";
+  if(beat.kind==="cover"){
     renderStage(beat.stage,beat.next,false);drawn.add(beat.stage);
     pileEl.innerHTML="";
-    renderPile(introPileEl);
+    buildCoverPile();
     activeStage=beat.stage;
   }else if(gather){
     renderStage(beat.stage,beat.lens,false);drawn.add(beat.stage);
-    if(beat.into){renderStage(beat.into,beat.next,false);drawn.add(beat.into);}
+    if(beat.into&&beat.into!==beat.stage){renderStage(beat.into,beat.next,false);drawn.add(beat.into);}
     renderPile();
     activeStage=beat.into||beat.stage;
   }else{
@@ -1375,7 +1388,7 @@ function playBeat(beat,animate=true){
     if(!drawn.has(st))st.zones.querySelectorAll(".chips").forEach(c=>{if(c.firstChild)c.textContent="";});
     st.el.toggleAttribute("inert",!drawn.has(st));
   });
-  flipChips(old,animate);
+  flipChips(old,animate,offCover);
 }
 
 /* Draw one desk: its running note, then its drawers — with the papers in them
@@ -1424,24 +1437,29 @@ function renderStage(st,view,withChips){
   zonesEl.querySelectorAll(".zone-label[data-cat]").forEach(l=>l.addEventListener("click",()=>{lastTrigger=l;openCard(l.dataset.cat,l.dataset.term);}));
 }
 
-/* FLIP play. Works across containers, so a slip flies drawer → pile → drawer
-   without the reader ever losing sight of which paper it is. */
-function flipChips(old,animate){
+/* FLIP play. Works across containers, so a slip flies cover → pile → drawer →
+   pile without the reader ever losing sight of which paper it is. It leaves at
+   the size it had, centre to centre, so it never jumps as it lifts off. The
+   cover's slips are only ever a starting point: the wind owns their transform. */
+function flipChips(old,animate,offCover){
   const chips=[...document.querySelectorAll(ALL_CHIPS)];
   if(!animate||reduceMotion)return;
   if(!Object.keys(old).length){chips.forEach(ch=>ch.classList.add("pop"));return;}
-  chips.forEach(ch=>{
+  chips.forEach((ch,i)=>{
     const o=old[ch.dataset.ag];
     const r=ch.getBoundingClientRect();
     if(o){
-      const dx=o.left-r.left, dy=o.top-r.top;
-      if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+      const dx=o.left+o.width/2-r.left-r.width/2, dy=o.top+o.height/2-r.top-r.height/2, s=o.width/r.width;
+      if(Math.abs(dx)<1&&Math.abs(dy)<1&&Math.abs(s-1)<.02)return;
       ch.classList.add("fly");
-      ch.style.transform=`translate(${dx}px,${dy}px) rotate(${(+ch.dataset.tilt||0)+(dx>0?4:-4)}deg)`;
+      ch.style.transform=`translate(${dx}px,${dy}px) rotate(${(+ch.dataset.tilt||0)+(dx>0?4:-4)}deg) scale(${s})`;
+      /* off the cover the wind lets go of them one at a time, bottom of the pile first */
+      if(offCover){ch.style.transitionDuration=".9s";ch.style.transitionDelay=i*16+"ms";}
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         ch.classList.remove("fly");ch.classList.add("land");
         ch.style.transform="";
-        ch.addEventListener("transitionend",()=>ch.classList.remove("land"),{once:true});
+        ch.addEventListener("transitionend",()=>{ch.classList.remove("land");
+          ch.style.transitionDuration=ch.style.transitionDelay="";},{once:true});
       }));
     }else{ch.classList.add("pop");}
   });
@@ -1520,10 +1538,13 @@ function buildAct(){
       frag.appendChild(after[i]);       // the chapter, in plain flow after the desk
     }
   });
-  /* before any desk: the slips sit stacked above the handoff, and the first desk
-     rises with its drawers empty. No element of its own — it holds for as long
-     as the reader is above the first lens. */
-  BEATS.unshift({el:null,kind:"intro",view:PILE,lens:BEATS[0].lens,stage:stages[0],next:BEATS[0].view});
+  /* before any desk: the slips blow about the cover, then the wind drops them on
+     the pile, where they wait out the introduction — a gather beat like the ones
+     after a desk, handing the pile to the first one. Neither beat has an element
+     of its own; measureStory() places them. */
+  const first=BEATS[0];
+  BEATS.unshift({el:null,kind:"cover",view:PILE,lens:first.lens,stage:first.stage,next:first.view},
+                {el:null,kind:"gather",view:PILE,lens:first.lens,stage:first.stage});
   /* each gather beat needs to know which desk it is handing the pile to */
   BEATS.forEach((b,i)=>{
     if(b.kind!=="gather")return;
@@ -1540,8 +1561,8 @@ function buildAct(){
 let beatTops=[],actEnd=Infinity;
 function measureStory(){
   beatTops=BEATS.map(b=>b.el?b.el.getBoundingClientRect().top+scrollY-b.stage.root.offsetHeight:-Infinity);
-  /* the first sort starts while the stack is still on screen, desk halfway up */
-  if(beatTops.length>1)beatTops[1]-=innerHeight*.5;
+  /* the slips leave the cover for the pile once it is nearly half scrolled away */
+  beatTops[1]=document.querySelector(".cover").offsetHeight*.45;
   /* where the act's own box ends, in document coordinates — the sticky pile
      is released here, but it stays 100svh tall and bottom-anchored to that
      point, so it keeps bleeding into the outro until scroll clears it too */
@@ -1931,24 +1952,24 @@ addEventListener("keydown",e=>{
 /* One deterministic PRNG so the scattered pile is the same on every load. */
 function seeded(seed){return()=>((seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff);}
 
+/* Every slip, not a sample: these are the papers that land on the pile. */
 function buildCoverPile(){
-  const host=$("#cover-pile");
-  if(!host)return;
+  const host=coverPileEl;
   const rnd=seeded(24);
-  const cols=4, rows=5, picks=[];
-  const stride=Math.max(1,Math.round(AGS.length/(cols*rows)));
-  for(let i=0;i<AGS.length&&picks.length<cols*rows;i+=stride)picks.push(AGS[i]);
-  host.innerHTML=picks.map((a,i)=>{
+  const cols=6, rows=Math.ceil(AGS.length/cols);
+  const gd=12;                                         // one current for all, so each gust is a front
+  host.innerHTML=AGS.map((a,i)=>{
     const c=i%cols, r=Math.floor(i/cols);
-    const left=(1+c*23+(rnd()*9-4.5)).toFixed(2);
-    const top=(1+r*19+(rnd()*9-4.5)).toFixed(2);
+    const left=(2+c*86/(cols-1)+(rnd()*9-4.5)).toFixed(2);
+    const top=(1+r*80/(rows-1)+(rnd()*9-4.5)).toFixed(2);
     const w=Math.round(58+rnd()*46);
-    const settle=(.2+i*.035).toFixed(2);
+    const settle=(.2+i*.02).toFixed(2);
     /* Lighter slips ride further. The current runs right and slightly up. */
     const light=1.35-(w-58)/46*.7;                       // 1.35 (small) … .65 (large)
     const gx=(78+rnd()*110)*light, gy=-(30+rnd()*66)*light;
     const gr=(4.5+rnd()*9)*light*(rnd()<.5?-1:1);        // how hard the slip pivots in the current
-    const gd=(9.5+rnd()*5.5).toFixed(1);                 // 9.5–15s per cycle
+    const fx=(10+rnd()*12)*light*(rnd()<.5?-1:1);        // how far it tips out of the page
+    const fy=(6+rnd()*10)*light*(rnd()<.5?-1:1);
     /* Negative delay = start mid-cycle. Phase rises left→right (and a little
        top→bottom) so one gust reads as a single wave crossing the pile. */
     const wave=(c/(cols-1))*.5+(r/(rows-1))*.16+rnd()*.03;
@@ -1960,11 +1981,11 @@ function buildCoverPile(){
         +`--gx:${gx.toFixed(1)}px;--gy:${gy.toFixed(1)}px;--gr:${gr.toFixed(1)}deg;--gd:${gd}s;`
         +`--gdel:${(-wave*gd).toFixed(2)}s;--d:${settle}s;`
         +`--fd:${fd}s;--fdel:${(+settle+.9+rnd()*2).toFixed(2)}s;`
+        +`--fx:${fx.toFixed(1)}deg;--fy:${fy.toFixed(1)}deg;`
         +`--fr:${(rnd()*8.5-2.5).toFixed(1)}deg"><button`)
       +"</span>";
   }).join("");
   host.setAttribute("inert","");
-  armWindGusts(host);
 }
 
 /* The wind builds as the reader works down the cover — by the time the pile is
@@ -2121,7 +2142,7 @@ document.querySelectorAll("figure[data-figure]").forEach(buildShift);
 
 const startView=location.hash.replace("#","");
 buildAct();
-buildCoverPile();
+armWindGusts(coverPileEl);
 buildDemoChips();
 buildBigNums();
 armReveals();
