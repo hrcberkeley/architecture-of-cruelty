@@ -197,10 +197,27 @@ body.stilled .cover-pile .chip{opacity:1}
 .howto-item .demo .chip{width:38px;--tilt:-2deg}
 .howto-item p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-soft)}
 .howto-item p b{display:block;color:var(--ink);font-weight:600;font-size:13.5px;margin-bottom:2px}
-.handoff{margin:clamp(40px,7vh,72px) 0 0;text-align:center;font-family:var(--disp);font-weight:600;
-  font-size:clamp(20px,2.2vw,26px);line-height:1.25;letter-spacing:-.015em;color:var(--ink)}
-.handoff span{display:block;font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink-faint);margin-top:14px}
+/* The handoff: a pinned title card between the introduction and the first desk.
+   The page goes dark, the pile rises to the middle of the screen, the three
+   sentences arrive one at a time, then the light comes back for the desk.
+   Everything here is a function of --p, the scene's scroll progress (0–1),
+   which syncStoryToScroll() keeps current. */
+.handoff-scene{position:relative;height:300svh;--p:0;
+  --dark:min(clamp(0,var(--p) / .1,1),clamp(0,(1 - var(--p)) / .1,1));
+  background:color-mix(in srgb,var(--ink) calc(var(--dark) * 100%),var(--desk))}
+.handoff-pin{position:sticky;top:0;height:100svh;box-sizing:border-box;padding:50svh 20px 0}
+.handoff{margin:0;text-align:center;font-family:var(--disp);font-weight:600;
+  font-size:clamp(30px,4.6vw,64px);line-height:1.08;letter-spacing:-.025em;text-wrap:balance;
+  color:color-mix(in srgb,var(--paper) calc(var(--dark) * 100%),var(--ink))}
+.handoff .hl,.handoff .cue{display:block;--in:clamp(0,(var(--p) - var(--at)) / .12,1);
+  opacity:min(var(--in),clamp(0,(.9 - var(--p)) / .08,1));translate:0 calc((1 - var(--in)) * 26px)}
+/* in one at a time, all held together, then gone before the light comes back */
+.handoff .hl:nth-child(1){--at:.06}
+.handoff .hl:nth-child(2){--at:.22}
+.handoff .hl:nth-child(3){--at:.38}
+.handoff .cue{--at:.52;margin-top:clamp(20px,4vh,36px);font-family:var(--mono);font-size:11.5px;
+  font-weight:500;letter-spacing:.14em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){.handoff .hl,.handoff .cue{translate:none}}
 
 /* ---------------- persistent story stage ---------------- */
 .stage{position:relative}
@@ -366,6 +383,11 @@ table.dr .dr-link:focus-visible{outline:2px solid var(--focus);outline-offset:1p
    cover — which is to say, for as long as the introduction or a chapter is
    being read. */
 .act.reading .pile,.act.reading .pile-tag,.act.reading .pile-shelf{opacity:1}
+/* On the handoff the pile is the subject: the middle of the screen, above the
+   sentences (which start halfway down, see .handoff-pin), saying what the tag would. */
+.act.title .pile-slot{left:50%;right:auto;bottom:calc(50svh + clamp(16px,3svh,32px));transform:translateX(-50%)}
+.act.title .pile-tag{display:none}
+.act.title .pile-shelf{opacity:0}
 /* On the shelf breakpoint a leaving or arriving desk stops above the shelf. */
 @media (max-width:899px){
   .act.reading .frame{padding-bottom:calc(var(--pile-h,120px) + 38px)}
@@ -875,10 +897,15 @@ footer b{color:var(--ink-soft);font-weight:600}
       </div>
     </div>
 
-    <p class="handoff reveal">Thirty-nine arrangements. Thirty-five countries. Ten ways to sort them.
-      <span>Keep scrolling</span></p>
-
   </div></div>
+</section>
+
+<!-- ============================ the handoff ============================ -->
+<!-- a pinned title card: see .handoff-scene, and the title beat in buildAct() -->
+<section class="handoff-scene" id="handoff">
+  <div class="handoff-pin">
+    <p class="handoff"><span class="hl">Thirty-nine arrangements.</span> <span class="hl">Thirty-five countries.</span> <span class="hl">Ten ways to sort them.</span> <span class="cue">Keep scrolling</span></p>
+  </div>
 </section>
 
 <!-- ============================ ACT II — the desk ============================ -->
@@ -1234,7 +1261,7 @@ let selected=null, activeDocPages=[], activeDocPage=0;
 /* the view a gather beat shows: no drawers at all, every slip in one stack */
 const PILE="__pile";
 const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const coverPileEl=$("#cover-pile");
+const coverPileEl=$("#cover-pile"), handoffEl=$("#handoff");
 const ALL_CHIPS="#act .zones .chip,#pile .chip";
 
 document.getElementById("pile-count").textContent=DATA.meta.total;
@@ -1322,19 +1349,21 @@ function layoutPapers(st){
 /* The pile: every slip in one stack, drawn bottom-up so the papers laid down
    first sit lowest. Deterministic jitter, so the stack is the same every time
    the story passes through it. */
-function renderPile(){
+function renderPile(big=false){
   const rnd=seeded(11);
   const n=AGS.length;
   const narrow=innerWidth<900;
   /* also capped against the viewport height: on the shelf breakpoint the stack
      sets the height of the shelf, and a phone in landscape has none to spare */
-  const pw=Math.round(Math.min(
+  let pw=Math.round(Math.min(
     narrow?Math.max(46,Math.min(74,innerWidth*.15)):Math.max(78,Math.min(126,innerWidth*.086)),
     Math.max(34,innerHeight*.13)));
+  /* on the handoff: half as big again, but never more than a third of the screen tall */
+  if(big)pw=Math.round(Math.min(pw*1.5,innerHeight*.21));
   const ph=Math.round(pw*297/210);
   const jx=Math.round(pw*.34), jy=Math.round(pw*.30);
   pileEl.style.cssText=`--paper-width:${pw}px;width:${pw+jx}px;height:${ph+jy}px`;
-  actEl.style.setProperty("--pile-h",(ph+jy)+"px");     // the shelf sizes itself off this
+  if(!big)actEl.style.setProperty("--pile-h",(ph+jy)+"px");     // the shelf sizes itself off this
   pileEl.innerHTML=AGS.map((a,i)=>{
     const t=n>1?i/(n-1):0;
     const px=(jx*.5+(rnd()*2-1)*jx*.5).toFixed(1);
@@ -1357,6 +1386,7 @@ function playBeat(beat,animate=true){
   activeBeat=beat;
   const gather=beat.kind==="gather";
   actEl.classList.toggle("reading",gather);
+  actEl.classList.toggle("title",!!beat.title);
   /* the pile takes the cover's slips at the strength they had, not from nothing */
   if(offCover&&gather){
     pileEl.style.transition="none";pileEl.style.opacity=getComputedStyle(coverPileEl).opacity;
@@ -1373,7 +1403,7 @@ function playBeat(beat,animate=true){
   }else if(gather){
     renderStage(beat.stage,beat.lens,false);drawn.add(beat.stage);
     if(beat.into&&beat.into!==beat.stage){renderStage(beat.into,beat.next,false);drawn.add(beat.into);}
-    renderPile();
+    renderPile(beat.title);
     activeStage=beat.into||beat.stage;
   }else{
     pileEl.innerHTML="";
@@ -1388,7 +1418,7 @@ function playBeat(beat,animate=true){
     if(!drawn.has(st))st.zones.querySelectorAll(".chips").forEach(c=>{if(c.firstChild)c.textContent="";});
     st.el.toggleAttribute("inert",!drawn.has(st));
   });
-  flipChips(old,animate,offCover);
+  flipChips(old,animate,offCover||!!beat.title);
 }
 
 /* Draw one desk: its running note, then its drawers — with the papers in them
@@ -1441,7 +1471,7 @@ function renderStage(st,view,withChips){
    pile without the reader ever losing sight of which paper it is. It leaves at
    the size it had, centre to centre, so it never jumps as it lifts off. The
    cover's slips are only ever a starting point: the wind owns their transform. */
-function flipChips(old,animate,offCover){
+function flipChips(old,animate,slow){
   const chips=[...document.querySelectorAll(ALL_CHIPS)];
   if(!animate||reduceMotion)return;
   if(!Object.keys(old).length){chips.forEach(ch=>ch.classList.add("pop"));return;}
@@ -1453,8 +1483,8 @@ function flipChips(old,animate,offCover){
       if(Math.abs(dx)<1&&Math.abs(dy)<1&&Math.abs(s-1)<.02)return;
       ch.classList.add("fly");
       ch.style.transform=`translate(${dx}px,${dy}px) rotate(${(+ch.dataset.tilt||0)+(dx>0?4:-4)}deg) scale(${s})`;
-      /* off the cover the wind lets go of them one at a time, bottom of the pile first */
-      if(offCover){ch.style.transitionDuration=".9s";ch.style.transitionDelay=i*16+"ms";}
+      /* off the cover, and up to the handoff, they go one at a time, bottom of the pile first */
+      if(slow){ch.style.transitionDuration=".9s";ch.style.transitionDelay=i*16+"ms";}
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         ch.classList.remove("fly");ch.classList.add("land");
         ch.style.transform="";
@@ -1540,11 +1570,13 @@ function buildAct(){
   });
   /* before any desk: the slips blow about the cover, then the wind drops them on
      the pile, where they wait out the introduction — a gather beat like the ones
-     after a desk, handing the pile to the first one. Neither beat has an element
-     of its own; measureStory() places them. */
+     after a desk — and the pile rises to the middle of the screen for the handoff,
+     from where the first desk is dealt. None of these beats has an element of
+     its own; measureStory() places them. */
   const first=BEATS[0];
   BEATS.unshift({el:null,kind:"cover",view:PILE,lens:first.lens,stage:first.stage,next:first.view},
-                {el:null,kind:"gather",view:PILE,lens:first.lens,stage:first.stage});
+                {el:null,kind:"gather",view:PILE,lens:first.lens,stage:first.stage},
+                {el:null,kind:"gather",title:true,view:PILE,lens:first.lens,stage:first.stage});
   /* each gather beat needs to know which desk it is handing the pile to */
   BEATS.forEach((b,i)=>{
     if(b.kind!=="gather")return;
@@ -1563,6 +1595,8 @@ function measureStory(){
   beatTops=BEATS.map(b=>b.el?b.el.getBoundingClientRect().top+scrollY-b.stage.root.offsetHeight:-Infinity);
   /* the slips leave the cover for the pile once it is nearly half scrolled away */
   beatTops[1]=document.querySelector(".cover").offsetHeight*.45;
+  /* and rises to the middle as the handoff pins, just as the page goes dark */
+  beatTops[2]=handoffEl.getBoundingClientRect().top+scrollY-innerHeight*.08;
   /* where the act's own box ends, in document coordinates — the sticky pile
      is released here, but it stays 100svh tall and bottom-anchored to that
      point, so it keeps bleeding into the outro until scroll clears it too */
@@ -1577,6 +1611,8 @@ function beatIndexAt(y){
 function syncStoryToScroll(){
   if(document.querySelector(".overlay.open"))return;
   if(!BEATS.length)return;
+  const h=handoffEl.getBoundingClientRect();
+  handoffEl.style.setProperty("--p",Math.max(0,Math.min(1,-h.top/(h.height-innerHeight))).toFixed(3));
   const b=BEATS[beatIndexAt(scrollY)];
   if(b!==activeBeat){
     if(b.lens!==(activeBeat&&activeBeat.lens))history.replaceState(null,"","#"+b.lens);
