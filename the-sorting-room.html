@@ -201,10 +201,12 @@ body.stilled .cover-pile .chip{opacity:1}
    The page goes dark, the pile rises to the middle of the screen, the three
    sentences arrive one at a time, then the light comes back for the desk.
    Everything here is a function of --p, the scene's scroll progress (0–1),
-   which syncStoryToScroll() keeps current. */
-.handoff-scene{position:relative;height:300svh;--p:0;
+   which syncStoryToScroll() keeps current. The scene rides up over the end of
+   the introduction, and starts see-through, so the dark falls over "How to
+   read this" on its way out rather than after an empty screen. */
+.handoff-scene{position:relative;height:300svh;margin-top:-55svh;--p:0;
   --dark:min(clamp(0,var(--p) / .1,1),clamp(0,(1 - var(--p)) / .1,1));
-  background:color-mix(in srgb,var(--ink) calc(var(--dark) * 100%),var(--desk))}
+  background:color-mix(in srgb,var(--ink) calc(var(--dark) * 100%),transparent)}
 .handoff-pin{position:sticky;top:0;height:100svh;box-sizing:border-box;padding:50svh 20px 0}
 .handoff{margin:0;text-align:center;font-family:var(--disp);font-weight:600;
   font-size:clamp(30px,4.6vw,64px);line-height:1.08;letter-spacing:-.025em;text-wrap:balance;
@@ -212,10 +214,10 @@ body.stilled .cover-pile .chip{opacity:1}
 .handoff .hl,.handoff .cue{display:block;--in:clamp(0,(var(--p) - var(--at)) / .12,1);
   opacity:min(var(--in),clamp(0,(.9 - var(--p)) / .08,1));translate:0 calc((1 - var(--in)) * 26px)}
 /* in one at a time, all held together, then gone before the light comes back */
-.handoff .hl:nth-child(1){--at:.06}
-.handoff .hl:nth-child(2){--at:.22}
-.handoff .hl:nth-child(3){--at:.38}
-.handoff .cue{--at:.52;margin-top:clamp(20px,4vh,36px);font-family:var(--mono);font-size:11.5px;
+.handoff .hl:nth-child(1){--at:.1}
+.handoff .hl:nth-child(2){--at:.25}
+.handoff .hl:nth-child(3){--at:.4}
+.handoff .cue{--at:.54;margin-top:clamp(20px,4vh,36px);font-family:var(--mono);font-size:11.5px;
   font-weight:500;letter-spacing:.14em;text-transform:uppercase}
 @media (prefers-reduced-motion:reduce){.handoff .hl,.handoff .cue{translate:none}}
 
@@ -1595,8 +1597,9 @@ function measureStory(){
   beatTops=BEATS.map(b=>b.el?b.el.getBoundingClientRect().top+scrollY-b.stage.root.offsetHeight:-Infinity);
   /* the slips leave the cover for the pile once it is nearly half scrolled away */
   beatTops[1]=document.querySelector(".cover").offsetHeight*.45;
-  /* and rises to the middle as the handoff pins, just as the page goes dark */
-  beatTops[2]=handoffEl.getBoundingClientRect().top+scrollY-innerHeight*.08;
+  /* and rises to the middle once the handoff has pinned and the dark is half down */
+  const h=handoffEl.getBoundingClientRect();
+  beatTops[2]=h.top+scrollY+(h.height-innerHeight)*.05;
   /* where the act's own box ends, in document coordinates — the sticky pile
      is released here, but it stays 100svh tall and bottom-anchored to that
      point, so it keeps bleeding into the outro until scroll clears it too */
