@@ -86,7 +86,7 @@ a{color:var(--seal)}
    press opens it, or a keyboard lands inside. */
 .consortium{position:fixed;left:0;right:0;top:0;z-index:45;
   transform:translateY(-100%);transition:transform .34s cubic-bezier(.16,1,.3,1)}
-.consortium:hover,.consortium:focus-within,.consortium.open{transform:none}
+.consortium.open{transform:none}
 .consortium-sheet{background:rgba(var(--paper-rgb),.97);
   border-bottom:1px solid var(--desk-line);box-shadow:0 10px 24px rgba(var(--ink-rgb),.16);
   /* The top strip stays blank so that the patch of screen the tab occupied
@@ -120,7 +120,6 @@ a{color:var(--seal)}
 .consortium:hover .consortium-tab,.consortium:focus-within .consortium-tab,
 .consortium.open .consortium-tab,body.stilled .consortium-tab{animation:none}
 .consortium-tab .ico{color:var(--stamp);transition:transform .34s cubic-bezier(.16,1,.3,1)}
-.consortium:hover .consortium-tab .ico,.consortium:focus-within .consortium-tab .ico,
 .consortium.open .consortium-tab .ico{transform:rotate(180deg)}
 @media (prefers-reduced-motion:reduce){.consortium,.consortium-tab .ico{transition:none}
   .consortium-tab{animation:none}}
@@ -2289,13 +2288,26 @@ if("scrollRestoration" in history)history.scrollRestoration="manual";
 if(VIEWS.some(v=>v.id===startView))pendingLens=startView;
 requestAnimationFrame(()=>{measureStory();jumpToPending();queueStorySync();});
 
-/* The ribbon opens on hover and on focus in CSS; the tab carries the pointer
-   and touch case, where there is no hover to lean on. */
+/* The ribbon has one state, and the pointer, the keyboard and the tab all go
+   through it. Splitting it between a CSS :hover and a class was what left the
+   tab unable to shut a drawer that its own hover and focus were holding open. */
 (function(){
-  var nav=document.getElementById("consortium"),tab=document.getElementById("consortium-tab");
-  tab.addEventListener("click",function(){
-    tab.setAttribute("aria-expanded",nav.classList.toggle("open"));
+  var nav=document.getElementById("consortium"),tab=document.getElementById("consortium-tab"),
+      canHover=window.matchMedia("(hover:hover)"),open=false;
+  function set(v){
+    open=v;
+    nav.classList.toggle("open",v);
+    tab.setAttribute("aria-expanded",v?"true":"false");
+  }
+  /* The tab's own focus must not open it: on a touch screen the tap focuses the
+     tab first, and the click that follows would shut it again on the way in. */
+  nav.addEventListener("focusin",function(e){if(e.target!==tab)set(true);});
+  nav.addEventListener("focusout",function(e){if(!nav.contains(e.relatedTarget))set(false);});
+  nav.addEventListener("pointerenter",function(){if(canHover.matches)set(true);});
+  nav.addEventListener("pointerleave",function(){
+    if(canHover.matches&&!nav.contains(document.activeElement))set(false);
   });
+  tab.addEventListener("click",function(){set(!open);});
 })();
 </script>
 </body>
