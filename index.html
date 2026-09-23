@@ -354,8 +354,17 @@ body.stilled .cover-pile .chip{opacity:1}
 .partner-cover img{display:block;width:100%;height:auto}
 /* Partner reporting: rows from a published Google Sheet, shown once their
    activation date and time (US Eastern) have passed. */
-.partner-box{margin:clamp(22px,4vh,36px) 0 0;background:var(--paper);border:1px solid var(--desk-line);
-  border-radius:4px;box-shadow:0 8px 24px rgba(var(--ink-rgb),.08)}
+/* The whole section (cover, stories, map) sits in one card, apart from the report. */
+.partner-panel{margin:clamp(22px,4vh,36px) 0 0;background:var(--paper);border:1px solid var(--desk-line);border-radius:6px;
+  box-shadow:0 10px 30px rgba(var(--ink-rgb),.10);padding:clamp(14px,2.5vw,24px);display:grid;gap:clamp(14px,2.5vw,22px)}
+.partner-panel>*{margin:0!important}
+.partner-panel .partner-cover img{border-radius:3px}
+.partner-panel .partner-embeds{border-top:1px solid var(--hairline);padding-top:clamp(14px,2.5vw,22px)}
+.partner-box{background:#fff;border:1px solid var(--desk-line);border-radius:4px}
+.partner-cols{display:flex;gap:12px;padding:5px 14px;border-bottom:1px solid var(--desk-line);
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+.partner-cols span:first-child{flex:none;width:13em}
+@media (max-width:560px){.partner-cols{display:none}}
 .partner-box-head{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;
   border-bottom:1px solid var(--desk-line);background:var(--desk-deep);border-radius:4px 4px 0 0;
   font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
@@ -1207,17 +1216,20 @@ footer b{color:var(--ink-soft);font-weight:600}
     </div>
 
     <div class="section-mark reveal"><span class="num">11</span><h2>Explore the reporting from our partners</h2></div>
-    <a class="partner-cover reveal" href="https://forbiddenstories.org/" target="_blank" rel="noopener">
+    <div class="partner-panel reveal">
+    <a class="partner-cover" href="https://forbiddenstories.org/" target="_blank" rel="noopener">
       <img src="fs_cover.jpg" alt="Forbidden Stories" loading="lazy" width="1200" height="675">
     </a>
-    <section class="partner-box reveal" id="partner-box" aria-labelledby="partner-box-title" hidden>
+    <section class="partner-box" id="partner-box" aria-labelledby="partner-box-title" hidden>
       <div class="partner-box-head"><span id="partner-box-title">Partner reporting</span><b id="partner-count"></b></div>
+      <div class="partner-cols" aria-hidden="true"><span>Outlet</span><span>Title</span></div>
       <ul class="partner-stories" id="partner-stories" tabindex="0" aria-labelledby="partner-box-title"></ul>
     </section>
-    <div class="partner-embeds reveal">
+    <div class="partner-embeds">
       <iframe src="https://icetracking.org/third-country/answer-map-embed.html?theme=light"
               height="600" scrolling="no" loading="lazy"
               title="IceTracking — third-country deportations"></iframe>
+    </div>
     </div>
     <script>
     (function () {
