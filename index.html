@@ -87,11 +87,14 @@ a{color:var(--seal)}
 .consortium{position:fixed;left:0;right:0;top:0;z-index:45;
   transform:translateY(-100%);transition:transform .34s cubic-bezier(.16,1,.3,1)}
 .consortium.open{transform:none}
-.consortium-sheet{background:rgba(var(--paper-rgb),.97);
+.consortium-sheet{position:relative;background:rgba(var(--paper-rgb),.97);
   border-bottom:1px solid var(--desk-line);box-shadow:0 10px 24px rgba(var(--ink-rgb),.16);
   /* The top strip stays blank so that the patch of screen the tab occupied
      while closed holds no link when the sheet slides down under the pointer. */
   padding:44px 0 13px;max-height:56svh;overflow:auto}
+.consortium-logo{position:absolute;top:8px;
+  left:max(clamp(20px,5vw,40px),env(safe-area-inset-left));display:block}
+.consortium-logo img{height:28px;width:auto;display:block;border-radius:2px}
 .consortium-row{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:2px;
   font-family:var(--mono);font-size:11px;letter-spacing:.015em}
 .consortium-row a{padding:3px 11px;text-decoration:none;
@@ -1153,7 +1156,7 @@ footer b{color:var(--ink-soft);font-weight:600}
 <section class="outro">
   <div class="wrap"><div class="col">
 
-    <div class="section-mark reveal" id="findings" tabindex="-1"><span class="num">09</span><h2>What the pile shows</h2></div>
+    <div class="section-mark reveal" id="findings" tabindex="-1"><span class="num">09</span><h2>What the agreements show</h2></div>
 
     <div class="findings">
       <div class="finding reveal"><span class="fnum">i</span>
@@ -1241,6 +1244,7 @@ footer b{color:var(--ink-soft);font-weight:600}
      stays tucked away until it is asked for. -->
 <nav class="consortium" id="consortium" aria-label="Reporting partners">
   <div class="consortium-sheet">
+    <a class="consortium-logo" href="https://forbiddenstories.org/projects_posts/the-deportation-project-inside-the-trump-administrations-secret-deals-to-expel-people-worldwide/" target="_blank" rel="noopener"><img src="fs_cover.jpg" alt="The Deportation Project"></a>
     <div class="wrap consortium-row">
       <span class="lede">Reported with</span>
       <a href="https://forbiddenstories.org/" target="_blank" rel="noopener">Forbidden Stories</a>
