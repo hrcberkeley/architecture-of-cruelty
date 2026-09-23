@@ -352,8 +352,16 @@ body.stilled .cover-pile .chip{opacity:1}
 .partner-embeds iframe{display:block;width:100%;border:none}
 .partner-cover{display:block;margin:clamp(30px,5vh,50px) 0 0}
 .partner-cover img{display:block;width:100%;height:auto}
-@media (min-width:900px){.partner-embeds{grid-template-columns:1fr 1fr;
-  width:96vw;margin-inline:calc(50% - 48vw)}}
+/* Partner reporting: rows from a published Google Sheet, shown once their
+   activation date and time (US Eastern) have passed. */
+.partner-stories{list-style:none;margin:clamp(22px,4vh,36px) 0 0;padding:0;border-top:1px solid var(--hairline)}
+.partner-stories li{border-bottom:1px solid var(--hairline)}
+.partner-stories a{display:flex;gap:16px;align-items:baseline;padding:11px 2px;text-decoration:none;color:var(--ink)}
+.partner-stories .media{flex:none;width:14em;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--stamp)}
+.partner-stories .title{font-family:var(--disp);font-size:17px;line-height:1.35;text-wrap:pretty}
+.partner-stories a:hover .title{color:var(--seal);text-decoration:underline;text-underline-offset:3px}
+@media (max-width:560px){.partner-stories a{flex-direction:column;gap:3px}.partner-stories .media{width:auto}}
 .dr-scroll{position:relative;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
 .dr-scroll:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 table.dr{border-collapse:separate;border-spacing:var(--cellgap);margin:0 auto}
@@ -1190,7 +1198,8 @@ footer b{color:var(--ink-soft);font-weight:600}
       <p>Because of the risk of documents being taken down or altered, we archived all references to removal arrangements immediately upon discovery. We collected and structured our data on a spreadsheet, which allowed us to create timelines and identify trends across third country removals. We worked on these country overview documents alongside our legal team, who concurrently microscopically examined the agreements using a detailed questionnaire template for each country.</p>
     </div>
 
-    <div class="section-mark reveal"><span class="num">11</span><h2>Explore the data from our partners</h2></div>
+    <div class="section-mark reveal"><span class="num">11</span><h2>Explore the reporting from our partners</h2></div>
+    <ul class="partner-stories reveal" id="partner-stories" aria-label="Partner reporting" hidden></ul>
     <a class="partner-cover reveal" href="https://forbiddenstories.org/" target="_blank" rel="noopener">
       <img src="fs_cover.jpg" alt="Forbidden Stories" loading="lazy" width="1200" height="675">
     </a>
@@ -1198,11 +1207,49 @@ footer b{color:var(--ink-soft);font-weight:600}
       <iframe src="https://icetracking.org/third-country/answer-map-embed.html?theme=light"
               height="600" scrolling="no" loading="lazy"
               title="IceTracking — third-country deportations"></iframe>
-      <iframe src="https://icetracking.org/third-country/mexico-map-embed.html?theme=light"
-              height="480" scrolling="no" loading="lazy"
-              title="IceTracking — the buses into Mexico"></iframe>
     </div>
     <script>
+    (function () {
+      var SHEET = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ-pKTDMjZ4IvSiX4f6NwznKBKWl6oZiVXdAsOJLvz0Az1qPxVAQC51uOUY-jV6WQKb8GroTNP7Rpvv/pub?gid=256906250&single=true&output=csv';
+      function parseCSV(t) {
+        var rows = [], row = [], f = '', q = false;
+        for (var i = 0; i < t.length; i++) {
+          var c = t[i];
+          if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+          else if (c === '"') q = true;
+          else if (c === ',') { row.push(f); f = ''; }
+          else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+          else f += c;
+        }
+        if (f || row.length) { row.push(f); rows.push(row); }
+        return rows;
+      }
+      // "21/09" (or "21/09/2026") + "1:00 AM - EDT" -> epoch ms; NaN if either is missing.
+      function activation(d, t) {
+        var dm = /^(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?$/.exec(d.trim());
+        var tm = /^(\d{1,2}):(\d{2})\s*(AM|PM)?\s*(?:-\s*(EDT|EST))?/i.exec(t.trim());
+        if (!dm || !tm) return NaN;
+        var h = +tm[1] % 12 + (/pm/i.test(tm[3] || '') ? 12 : 0);
+        var off = /est/i.test(tm[4] || '') ? 5 : 4;   // US Eastern; EDT unless marked EST
+        return Date.UTC(+(dm[3] || 2026), +dm[2] - 1, +dm[1], h + off, +tm[2]);
+      }
+      fetch(SHEET).then(function (r) { return r.text(); }).then(function (text) {
+        var rows = parseCSV(text), head = rows.shift().map(function (h) { return h.trim(); });
+        var col = function (n) { return head.indexOf(n); };
+        var iM = col('Media'), iD = col('Activation date'), iT = col('Activation time'), iS = col('Short title'), iL = col('Link');
+        var now = Date.now(), list = document.getElementById('partner-stories');
+        rows.forEach(function (r) {
+          var link = (r[iL] || '').trim(), title = (r[iS] || '').trim();
+          if (!/^https?:\/\//.test(link) || !title || !(activation(r[iD] || '', r[iT] || '') <= now)) return;
+          var li = document.createElement('li'), a = document.createElement('a');
+          a.href = link; a.target = '_blank'; a.rel = 'noopener';
+          var m = document.createElement('span'); m.className = 'media'; m.textContent = (r[iM] || '').trim();
+          var s = document.createElement('span'); s.className = 'title'; s.textContent = title;
+          a.append(m, s); li.append(a); list.append(li);
+        });
+        list.hidden = !list.children.length;
+      }).catch(function () {});
+    })();
     window.addEventListener('message', function (e) {
       if (!e.data || e.data.type !== 'tcd:height' || !e.data.height) return;
       document.querySelectorAll('.partner-embeds iframe').forEach(function (f) {
