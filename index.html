@@ -94,7 +94,9 @@ a{color:var(--seal)}
   padding:44px 0 13px;max-height:56svh;overflow:auto}
 .consortium-logo{position:absolute;top:8px;
   left:max(clamp(20px,5vw,40px),env(safe-area-inset-left));display:block}
-.consortium-logo img{height:28px;width:auto;display:block;border-radius:2px}
+.consortium-logo img{height:84px;width:auto;display:block;border-radius:2px}
+/* Below this width the centred row would run under the logo, so make room. */
+@media (max-width:1560px){.consortium-sheet{padding-left:190px}}
 .consortium-row{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:2px;
   font-family:var(--mono);font-size:11px;letter-spacing:.015em}
 .consortium-row a{padding:3px 11px;text-decoration:none;
@@ -127,6 +129,8 @@ a{color:var(--seal)}
 @media (prefers-reduced-motion:reduce){.consortium,.consortium-tab .ico{transition:none}
   .consortium-tab{animation:none}}
 @media (max-width:700px){
+  .consortium-logo{display:none}
+  .consortium-sheet{padding-left:0}
   .consortium-row{font-size:10px}
   .consortium-row a{padding:3px 9px}
   .consortium-row .lede{font-size:9.5px;padding-right:9px}
