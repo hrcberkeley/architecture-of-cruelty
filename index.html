@@ -958,7 +958,6 @@ footer b{color:var(--ink-soft);font-weight:600}
     <div class="prose-block reveal">
       <p>Third country removal arrangements are the processes by which representatives from the United States and another country negotiate terms for sending refugees and migrants from the United States to a third country with which the refugee or migrant has no prior connections and may not even speak the language. In March 2025, an internal memo by Kristi Noem, then Secretary of the Department of Homeland Security, set forth guidance on conducting third country removals to DHS employees with the directive that, "Immigration officers will not affirmatively ask whether the alien is afraid of being removed to that country." Separately, the following month, ICE acting director Todd Lyons gave the keynote address at the Border Security Expo proclaiming, "We need to get better at treating this like a business...like Amazon (prime) but with human beings."<sup class="fn"><a href="https://azmirror.com/2025/04/08/ice-director-envisions-amazon-like-mass-deportation-system-prime-but-with-human-beings/" target="_blank" rel="noopener">6</a></sup> Together, these remarks speak to the new reality of mass deportations from the U.S. – arresting immigrants in never seen before numbers while intentionally avoiding asking them questions that would trigger international refugee protections. While the use of removal agreements is not new, the second Trump Administration has exponentially expanded their scale and purpose, and altered their removal processes.</p>
     </div>
-    <span id="update-after" aria-hidden="true" style="display:block;height:1px"></span>
 
     <div class="howto reveal">
       <h3>How to read this</h3>
@@ -2156,21 +2155,24 @@ document.getElementById("notes-btn")?.addEventListener("click",e=>{
   syncModalInert();
   $("#card-close").focus();
 });
-/* The dashboard update opens once, the first time the reader scrolls past section 01. */
+/* The dashboard update opens once, as the reader reaches the introduction's section 01
+   heading. A scroll check rather than an IntersectionObserver, so a reader who jumps
+   past the heading (or reloads further down) gets it too. */
 (function(){
-  const after=$("#update-after"),tpl=$("#update-tpl");
-  if(!after||!tpl||!("IntersectionObserver" in window))return;
-  const io=new IntersectionObserver(([e])=>{
-    if(e.isIntersecting||e.boundingClientRect.top>0)return;
-    io.disconnect();
+  const head=$(".intro .section-mark"),tpl=$("#update-tpl");
+  if(!head||!tpl)return;
+  function check(){
+    if(head.getBoundingClientRect().top>innerHeight)return;
+    removeEventListener("scroll",check);
     lastTrigger=null;
     $("#card-content").innerHTML=tpl.innerHTML;
     $("#overlay").classList.add("open");
     document.body.classList.add("doc-open");
     syncModalInert();
     $("#card-close").focus();
-  });
-  io.observe(after);
+  }
+  addEventListener("scroll",check,{passive:true});
+  check();
 })();
 $("#card-close").addEventListener("click",closeCard);
 $("#overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeCard();});
