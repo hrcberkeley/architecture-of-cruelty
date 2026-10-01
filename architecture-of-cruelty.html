@@ -747,6 +747,8 @@ details.fold p{margin-top:7px}
 .card .crumb .here{color:var(--ink);font-weight:600}
 .card h2{font-family:var(--disp);font-weight:600;font-size:23px;margin:0 0 10px;letter-spacing:-.01em;line-height:1.1}
 .card .def{font-size:14.5px;line-height:1.6;margin:0 0 10px}
+.card h3{font-size:14px;font-weight:600;margin:16px 0 5px}
+.card .def a{color:var(--seal);text-decoration:underline;text-underline-offset:3px}
 .card .catnote{font-size:13px;line-height:1.6;color:var(--ink-soft);margin:0;padding-top:10px;border-top:1px solid var(--desk-line)}
 .card .members{margin-top:14px}
 .card .members h4{font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:0 0 7px}
@@ -956,6 +958,7 @@ footer b{color:var(--ink-soft);font-weight:600}
     <div class="prose-block reveal">
       <p>Third country removal arrangements are the processes by which representatives from the United States and another country negotiate terms for sending refugees and migrants from the United States to a third country with which the refugee or migrant has no prior connections and may not even speak the language. In March 2025, an internal memo by Kristi Noem, then Secretary of the Department of Homeland Security, set forth guidance on conducting third country removals to DHS employees with the directive that, "Immigration officers will not affirmatively ask whether the alien is afraid of being removed to that country." Separately, the following month, ICE acting director Todd Lyons gave the keynote address at the Border Security Expo proclaiming, "We need to get better at treating this like a business...like Amazon (prime) but with human beings."<sup class="fn"><a href="https://azmirror.com/2025/04/08/ice-director-envisions-amazon-like-mass-deportation-system-prime-but-with-human-beings/" target="_blank" rel="noopener">6</a></sup> Together, these remarks speak to the new reality of mass deportations from the U.S. – arresting immigrants in never seen before numbers while intentionally avoiding asking them questions that would trigger international refugee protections. While the use of removal agreements is not new, the second Trump Administration has exponentially expanded their scale and purpose, and altered their removal processes.</p>
     </div>
+    <span id="update-after" aria-hidden="true" style="display:block;height:1px"></span>
 
     <div class="howto reveal">
       <h3>How to read this</h3>
@@ -1315,6 +1318,12 @@ footer b{color:var(--ink-soft);font-weight:600}
     <div id="card-content"></div>
   </div>
 </div>
+<template id="update-tpl"><h2 id="card-title">Dashboard updates</h2>
+<h3>Equatorial Guinea</h3>
+<p class="def">Since this report was written, human rights abuses against transferred refugees by Equatorial Guinea’s authorities have escalated significantly. Lawyers and <a href="https://www.amnesty.org/en/documents/afr24/1476/2026/en/" target="_blank" rel="noopener">Amnesty International</a> confirmed that on September 11, Equatorial Guinean authorities arrested two of the transferred refugees at the hotel, being used as a detention center, and took them away. Later that day, in front of all the transferred people being detained at the hotel, the officials returned to the hotel with the two men, with their heads covered with bags and tied with rope, and then viciously beat the men, and pushed them down a flight of stairs. Since then, the men have been imprisoned in a local jail, without charge, and are essentially being held incommunicado.</p>
+<h3>D.V.D. v. Department of Homeland Security</h3>
+<p class="def">On September 18, 2026, the First Circuit <a href="https://www.ca1.uscourts.gov/sites/ca1/files/opnfiles/26-1212P-01A.pdf" target="_blank" rel="noopener">upheld</a> the District Court's ruling that DHS’s third country removal policy is unlawful and DHS must give noncitizens notice and a meaningful opportunity to raise fear-based claims before removal. On September 23, the First Circuit <a href="https://www.courtlistener.com/docket/72347392/00108513248/dvd-v-us-department-of-homeland-security/" target="_blank" rel="noopener">halted</a> all third-country removals pending appeal.</p>
+<p class="def">On September 29, the Supreme Court <a href="https://www.supremecourt.gov/docket/docketfiles/html/public/26-426.html" target="_blank" rel="noopener">granted</a> certiorari to address, among other questions, whether the Government's guidance on third-country removals is unlawful. The Court also stayed the First Circuit's decision, allowing third-country removals to resume until it rules on the merits.</p></template>
 
 
 <!-- The consortium sits last in the document so it never stands between the
@@ -2147,6 +2156,22 @@ document.getElementById("notes-btn")?.addEventListener("click",e=>{
   syncModalInert();
   $("#card-close").focus();
 });
+/* The dashboard update opens once, the first time the reader scrolls past section 01. */
+(function(){
+  const after=$("#update-after"),tpl=$("#update-tpl");
+  if(!after||!tpl||!("IntersectionObserver" in window))return;
+  const io=new IntersectionObserver(([e])=>{
+    if(e.isIntersecting||e.boundingClientRect.top>0)return;
+    io.disconnect();
+    lastTrigger=null;
+    $("#card-content").innerHTML=tpl.innerHTML;
+    $("#overlay").classList.add("open");
+    document.body.classList.add("doc-open");
+    syncModalInert();
+    $("#card-close").focus();
+  });
+  io.observe(after);
+})();
 $("#card-close").addEventListener("click",closeCard);
 $("#overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeCard();});
 addEventListener("keydown",e=>{
